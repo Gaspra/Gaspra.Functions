@@ -79,17 +79,15 @@ GO
             {
                 return
 $@"IF NOT EXISTS (SELECT 1 FROM [sys].[types] st JOIN [sys].[schemas] ss ON st.schema_id = ss.schema_id WHERE st.name = N'{tableTypeName}' AND ss.name = N'{schemaName}')
-BEGIN
-";
+BEGIN";
             }
 
             public static string Body(string tableTypeName, string schemaName, IEnumerable<Column> columns)
             {
                 var body =
-$@"CREATE TYPE [{schemaName}].[{tableTypeName}] AS TABLE(
-{string.Join($",{Environment.NewLine}", columns.OrderBy(c => c.Name).Select(c => $"[{c.Name}] {General.DataType(c)} {General.NullableColumn(c)}"))}
-)
-";
+$@"    CREATE TYPE [{schemaName}].[{tableTypeName}] AS TABLE(
+{string.Join($",{Environment.NewLine}", columns.OrderBy(c => c.Name).Select(c => $"        [{c.Name}] {General.DataType(c)} {General.NullableColumn(c)}"))}
+    )";
                 return body;
             }
 
@@ -132,8 +130,8 @@ ALTER PROCEDURE [{schemaName}].[{sprocName}]
 AS
 BEGIN
 
-SET NOCOUNT ON;
 SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+
 ";
             }
 
@@ -142,16 +140,15 @@ SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
                 var tableVariable =
 $@"DECLARE @{sprocName}Variable TABLE
 (
-{string.Join($",{Environment.NewLine}", databaseTable.Columns.Where(c => !c.IdentityColumn).Select(c => $"[{c.Name}] {General.DataType(c)} {General.NullableColumn(c)}"))}
+{string.Join($",{Environment.NewLine}", databaseTable.Columns.Where(c => !c.IdentityColumn).Select(c => $"    [{c.Name}] {General.DataType(c)} {General.NullableColumn(c)}"))}
 )
 
 INSERT INTO @{sprocName}Variable
 SELECT
-{string.Join($",{Environment.NewLine}", databaseTable.Columns.Where(c => !c.IdentityColumn).Select(c => $"[{GetInsertInto(c)}]"))}
+{string.Join($",{Environment.NewLine}", databaseTable.Columns.Where(c => !c.IdentityColumn).Select(c => $"    [{GetInsertInto(c)}]"))}
 FROM
     @{tableTypeVariable} AS tt
-INNER JOIN {string.Join($"{Environment.NewLine}INNER JOIN ", tablesToJoin.Select(t => $"[{schemaName}].[{t.joinTable.Name}] AS alias_{t.joinTable.Name.ToLower()} ON {string.Join(" AND ", t.selectColumns.Select(c => $"tt.[{c.Name}]=alias_{t.joinTable.Name.ToLower()}.[{c.Name}]"))}"))}
-
+    INNER JOIN {string.Join($"{Environment.NewLine}INNER JOIN ", tablesToJoin.Select(t => $"[{schemaName}].[{t.joinTable.Name}] AS alias_{t.joinTable.Name.ToLower()} ON {string.Join(" AND ", t.selectColumns.Select(c => $"tt.[{c.Name}] = alias_{t.joinTable.Name.ToLower()}.[{c.Name}]"))}"))}
 ";
                 return tableVariable;
             }
@@ -172,7 +169,7 @@ INNER JOIN {string.Join($"{Environment.NewLine}INNER JOIN ", tablesToJoin.Select
                     sproc +=
 $@"DECLARE @InsertedValues TABLE (
     [{databaseTable.Name}Id] [int],
-    {string.Join($",{Environment.NewLine}", databaseTable.Columns.Where(c => matchOn.Any(m => m.Equals(c.Name))).Select(c => $"[{c.Name}] {General.DataType(c)}")) }
+{string.Join($",{Environment.NewLine}", databaseTable.Columns.Where(c => matchOn.Any(m => m.Equals(c.Name))).Select(c => $"    [{c.Name}] {General.DataType(c)}")) }
 ){Environment.NewLine}{Environment.NewLine}"
 ;
                 }
@@ -180,7 +177,8 @@ $@"DECLARE @InsertedValues TABLE (
                 sproc +=
 $@"MERGE [{schemaName}].[{databaseTable.Name}] AS t
 USING @{tableTypeVariable} AS s
-    ON ({string.Join($"{Environment.NewLine}AND ", matchOn.Select(m => $"t.[{m}]=s.[{m}]"))})
+    ON ({Environment.NewLine}        {string.Join($"{Environment.NewLine}        AND ", matchOn.Select(m => $"t.[{m}] = s.[{m}]"))}
+    )
 
 WHEN NOT MATCHED BY TARGET
     THEN INSERT (
@@ -197,7 +195,7 @@ WHEN NOT MATCHED BY TARGET
                     sproc += $@"
 WHEN MATCHED
     THEN UPDATE SET
-        {string.Join($",{Environment.NewLine}        ", databaseTable.Columns.Where(c => !c.IdentityColumn).Select(c => $"t.[{c.Name}]=s.[{c.Name}]"))}
+        {string.Join($",{Environment.NewLine}        ", databaseTable.Columns.Where(c => !c.IdentityColumn).Select(c => $"t.[{c.Name}] = s.[{c.Name}]"))}
 ";
                 }
 
@@ -208,18 +206,18 @@ WHEN NOT MATCHED BY SOURCE AND t.{retentionPolicy.ComparisonColumn} < DATEADD(mo
     THEN DELETE
 ";
                 }
+
                 if (!string.IsNullOrWhiteSpace(deleteOnFactId) && deleteOn.Any())
                 {
                     sproc +=
-                $@"
+$@"
 OUTPUT
     inserted.{databaseTable.Name}Id,
-    {string.Join($",{Environment.NewLine}", databaseTable.Columns.Where(c => matchOn.Any(m => m.Equals(c.Name))).Select(c => $"inserted.{c.Name}")) }
+    {string.Join($",{Environment.NewLine}    ", databaseTable.Columns.Where(c => matchOn.Any(m => m.Equals(c.Name))).Select(c => $"inserted.{c.Name}")) }
 INTO @InsertedValues
 ";
-                }
-                sproc += $"{Environment.NewLine}";
-                sproc += $"    ;{Environment.NewLine}";
+}
+                    sproc += $";{Environment.NewLine}";
 
                 if (!string.IsNullOrWhiteSpace(deleteOnFactId) && deleteOn.Any())
                 {
@@ -234,6 +232,7 @@ WHERE
     iv_outer.{databaseTable.Name}Id IS NULL
 ";
                 }
+
 
                 sproc += $"{Environment.NewLine}";
 
