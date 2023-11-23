@@ -9,3 +9,4 @@ nuget Gaspra.Signing
 nuget Microsoft.Extensions.Hosting
 nuget Microsoft.Extensions.Hosting.Abstractions
 nuget System.Data.Sqlclient
+nuget TinyCsvParser

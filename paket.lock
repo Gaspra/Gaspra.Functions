@@ -189,3 +189,4 @@ NUGET
     System.Text.Json (6.0.4)
       System.Runtime.CompilerServices.Unsafe (>= 6.0)
       System.Text.Encodings.Web (>= 6.0)
+    TinyCsvParser (2.7)

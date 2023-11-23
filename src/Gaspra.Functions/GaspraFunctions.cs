@@ -32,6 +32,17 @@ namespace Gaspra.Functions
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+            var storeFinderDataConverter = new StoreFinderDataConverter();
+
+            try
+            {
+                await storeFinderDataConverter.ConvertCsv();
+            }
+            catch (Exception ex)
+            {
+                var exception = ex;
+            }
+
             if (Debug.DebugMode)
             {
                 _cxt.FunctionName = Debug.FunctionName;

@@ -2,3 +2,4 @@ Gaspra.Logging.Builder
 Microsoft.Extensions.Hosting
 Microsoft.Extensions.Hosting.Abstractions
 Microsoft.Extensions.DependencyInjection
+TinyCsvParser

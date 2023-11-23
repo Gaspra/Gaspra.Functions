@@ -27,5 +27,11 @@
       <PackagePath></PackagePath>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="StoreFinderData.csv" />
+    <Resource Include="StoreFinderData.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
