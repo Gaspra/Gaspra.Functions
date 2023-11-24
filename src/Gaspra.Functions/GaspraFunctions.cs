@@ -32,11 +32,11 @@ namespace Gaspra.Functions
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            var storeFinderDataConverter = new StoreFinderDataConverter();
+            var openingHoursDataConverter = new OpeningHoursDataConverter();
 
             try
             {
-                await storeFinderDataConverter.ConvertCsv();
+                await openingHoursDataConverter.ConvertCsv();
             }
             catch (Exception ex)
             {

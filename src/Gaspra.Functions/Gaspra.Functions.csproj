@@ -28,10 +28,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Remove="StoreFinderData.csv" />
-    <Resource Include="StoreFinderData.csv">
+    <!--<None Remove="OpeningHours.csv" />-->
+    <None Include="OpeningHours.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+    </None>
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
